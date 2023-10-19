@@ -67,7 +67,7 @@ public class ExchangeRatesBot extends TelegramLongPollingBot {
                 /eur - курс евро
                 
                 Если вы Дашулик, воспользуйтесь командой:
-                /dasha 
+                /dasha
                 
                 Дополнительные команды:
                 /help - получение справки

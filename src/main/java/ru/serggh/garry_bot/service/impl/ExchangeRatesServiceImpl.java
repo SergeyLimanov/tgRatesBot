@@ -14,11 +14,10 @@ import org.w3c.dom.Document;
 
 import javax.xml.xpath.*;
 import java.io.StringReader;
+import java.util.Optional;
 
 @Service
 public class ExchangeRatesServiceImpl implements ExchangeRatesService {
-
-    private static final Logger LOG = LoggerFactory.getLogger(ExchangeRatesServiceImpl.class);
 
     private static final String USD_XPATH = "/ValCurs//Valute[@ID='R01235']/Value";
     private static final String EUR_XPATH = "/ValCurs//Valute[@ID='R01239']/Value";
@@ -29,7 +28,7 @@ public class ExchangeRatesServiceImpl implements ExchangeRatesService {
     @Cacheable(value = "usd", unless = "#result == null or #result.isEmpty()")
     @Override
     public String getUSDExchangeRate() throws ServiceException {
-        var xmlOptional = client.getCurrencyRatesXML();
+        Optional<String> xmlOptional = client.getCurrencyRatesXML();
         String xml = xmlOptional.orElseThrow(
                 () -> new ServiceException("Не удалось получить XML")
         );
@@ -39,7 +38,8 @@ public class ExchangeRatesServiceImpl implements ExchangeRatesService {
     @Cacheable(value = "eur", unless = "#result == null or #result.isEmpty()")
     @Override
     public String getEURExchangeRate() throws ServiceException {
-        var xmlOptional = client.getCurrencyRatesXML();
+
+        Optional<String> xmlOptional = client.getCurrencyRatesXML();
         String xml;
         xml = xmlOptional.orElseThrow(
                 () -> new ServiceException("Не удалось получить XML")
@@ -47,26 +47,15 @@ public class ExchangeRatesServiceImpl implements ExchangeRatesService {
         return extractCurrencyValueFromXML(xml, EUR_XPATH);
     }
 
-    @CacheEvict("usd")
-    @Override
-    public void clearUSDCache() {
-        LOG.info("Cache \"usd\" cleared!");
-    }
-
-    @CacheEvict("eur")
-    @Override
-    public void clearEURCache() {
-        LOG.info("Cache \"eur\" cleared!");
-    }
 
     private static String extractCurrencyValueFromXML(String xml, String xpathExpression)
             throws ServiceException {
-        var source = new InputSource(new StringReader(xml));
+        InputSource source = new InputSource(new StringReader(xml));
         try {
-            var xpath = XPathFactory.newInstance().newXPath();
-            var document = (Document) xpath.evaluate("/", source, XPathConstants.NODE);
+            XPath xPath = XPathFactory.newInstance().newXPath();
+            Document document = (Document) xPath.evaluate("/", source, XPathConstants.NODE);
 
-            return xpath.evaluate(xpathExpression, document);
+            return xPath.evaluate(xpathExpression, document);
         } catch (XPathExpressionException e) {
             throw new ServiceException("Не удалось распарсить XML", e);
         }
